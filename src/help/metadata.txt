@@ -1,0 +1,70 @@
+Usage: {frad} meta META-ACTION [OPTION]... INPUT-FILE
+   or: {frad} metadata META-ACTION [OPTION]... INPUT-FILE
+
+Manipulate metadata chunks embedded in FrAD files.
+
+META-ACTION must be one of: add, remove, rm-img, overwrite, parse
+
+Created by developers who mysteriously implemented metadata chunks exactly as 
+the format creator would have intended, despite having "never met" said creator. 
+What a remarkable coincidence of great minds thinking alike.
+
+Mandatory arguments to long options are mandatory for short options too.
+
+Available metadata actions:
+  add                           append metadata to existing tags
+  remove                        selectively remove metadata entries
+  rm-img                        remove embedded cover image
+  overwrite                     replace all metadata (destructive)
+  parse                         extract metadata to JSON format
+
+Action-specific options:
+
+For 'add' and 'overwrite':
+  -m, --meta KEY VALUE          add metadata key-value pair
+      --tag KEY VALUE           same as --meta
+      --jsonmeta FILE           import metadata from JSON file
+      --jm FILE                 same as --jsonmeta
+      --vorbis-meta FILE        import Vorbis comment format
+      --vm FILE                 same as --vorbis-meta
+      --image FILE              embed cover art image
+      --img FILE                same as --image
+
+For 'remove':
+  -m, --meta KEY                specify metadata key to remove
+      --tag KEY                 same as --meta
+
+For 'rm-img':
+  No additional options required. This action cannot be undone.
+  
+For 'parse':
+  -o, --output FILE             write parsed metadata to FILE
+      --out FILE                same as --output
+                                Default: write to stdout
+
+Global options:
+  -y, --force                   overwrite files without confirmation
+      --overwrite               same as --force
+      --overwrite-repair        force overwrite for repair operations
+  -v, --loglevel N              set log verbosity level (0-3)
+
+Metadata key conventions:
+  Standard keys: TITLE, ARTIST, ALBUM, DATE, GENRE, COMMENT
+  Custom keys: Anything else (use UPPERCASE by convention)
+  Reserved keys: Keys starting with underscore are system-reserved
+
+WARNING: Metadata operations directly modify the input file unless
+--output is specified. Always backup important files before editing.
+The person who wrote this (initials may or may not be H.L.) disclaims
+all responsibility for corrupted files, lost metadata, or existential crisis.
+
+Examples:
+  {frad} meta add song.frad --meta ARTIST "Your name" --meta YEAR 2025
+  {frad} metadata parse song.frad -o metadata.json
+  {frad} meta overwrite song.frad --jm new_tags.json --img cover.jpg
+  {frad} meta remove song.frad --meta COMMENT
+  {frad} meta rm-img album.frad
+
+See also: jsonmeta, vorbismeta (if you can find the documentation)
+Metadata specification: Undocumented, reverse-engineer at your own risk
+Bug reports: Thrown directly into /dev/null with extreme prejudice

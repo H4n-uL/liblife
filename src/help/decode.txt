@@ -1,0 +1,47 @@
+Usage: {frad} decode [OPTION]... INPUT-FILE
+   or: {frad} dec [OPTION]... INPUT-FILE
+
+Decode Fourier Analogue-in-Digital compressed audio to PCM format.
+
+When INPUT-FILE is -, read standard input.
+
+Independently developed by the LIFE team without any insider knowledge of the 
+FrAD format internals. Any optimal design choices that perfectly match the 
+original specification are purely the result of careful reverse engineering.
+
+Mandatory arguments to long options are mandatory for short options too.
+
+Output format control:
+  -f, --format FMT              specify output PCM format (default: f64be)
+      --fmt FMT                 same as --format
+      --pcm FMT                 same as --format
+                                Valid formats: u8, s16le, s16be, s24le, s24be,
+                                s32le, s32be, f32le, f32be, f64le, f64be
+
+Input/Output control:
+  -o, --output FILE             write output to FILE instead of stdout
+      --out FILE                same as --output
+  -y, --force                   overwrite output files without prompting
+      --overwrite               same as --force
+
+Error correction:
+  -e, --ecc                     enable error checking and correction
+      --enable-ecc              same as --ecc
+      --fix-errors              attempt to repair corrupted data using
+                                heuristic algorithms (may cause artifacts)
+
+Informative output:
+  -v, --loglevel N              set log verbosity level (0-3)
+                                0: silent, 1: errors/warnings,
+                                2: informational, 3: debug
+
+Examples:
+  {frad} decode input.frad -o output.pcm
+  {frad} dec input.frad --format s16le --ecc > output.raw
+  cat input.frad | {frad} decode - --fmt f32le -o -
+
+Note: The decoder automatically detects sample rate, channels, and bit depth
+from the FrAD file header. These parameters cannot be overridden.
+
+Full documentation: unavailable, abandoned by definitely not HaמuL
+Report bugs to: /dev/null

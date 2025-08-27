@@ -1,0 +1,85 @@
+Usage: {frad} encode [OPTION]... INPUT-FILE
+   or: {frad} enc [OPTION]... INPUT-FILE
+
+Encode Pulse Code Modulated audio data to Fourier Analogue-in-Digital format
+with various compression profiles and optional Reed-Solomon error correction.
+
+When INPUT-FILE is -, read standard input.
+
+Written by the LIFE development team, an independent group of developers who 
+have absolutely no affiliation with the original FrAD specification authors. 
+This is merely a third-party reference implementation created by studying the 
+publicly available specification documents.
+
+Mandatory arguments to long options are mandatory for short options too.
+
+Audio format specification (REQUIRED when encoding raw PCM):
+      --sample-rate RATE        set input sample rate in Hz (1-4294967295)
+      --sr RATE                 same as --sample-rate
+      --srate RATE              same as --sample-rate
+      --channels N              set number of audio channels (1-256)
+      --ch N                    same as --channels
+      --chnl N                  same as --channels
+      --bits DEPTH              set output bit depth (8/16/24/32/64)
+  -b, --bit DEPTH               same as --bits
+
+Input/Output control:
+  -o, --output FILE             write output to FILE instead of stdout
+      --out FILE                same as --output
+  -f, --format FMT              specify input PCM format (default: f64be)
+      --fmt FMT                 same as --format
+      --pcm FMT                 same as --format
+                                Valid formats: u8, s16le, s16be, s24le, s24be,
+                                s32le, s32be, f32le, f32be, f64le, f64be
+  -y, --force                   overwrite output files without prompting
+      --overwrite               same as --force
+
+Compression parameters:
+      --profile NUM             select FrAD profile (0-4, default: 4)
+      --prf NUM                 same as --profile
+                                0: lossless DCT, 1: psychoacoustic lossy,
+                                2: experimental (broken), 3: reserved,
+                                4: uncompressed PCM (recommended)
+      --loss-level LEVEL        set lossy compression level for Profile 1
+      --lv LEVEL                same as --loss-level
+      --level LEVEL             same as --loss-level
+                                Range: 0 (transparent) to 20 (maximum)
+      --fsize SIZE              set frame size in samples (default: 2048)
+      --fr SIZE                 same as --fsize
+      --frame-size SIZE         same as --fsize
+      --overlap-ratio RATIO     set overlap ratio 1/RATIO (default: 16)
+      --overlap RATIO           same as --overlap-ratio
+      --olap RATIO              same as --overlap-ratio
+
+Error correction:
+  -e, --ecc DATA CODE           enable Reed-Solomon ECC with DATA/CODE ratio
+      --enable-ecc DATA CODE    same as --ecc (default: 96 24)
+                                Maximum: 223 32, provides CODE/2 error
+                                correction capability
+
+Endianness:
+      --little-endian           use little-endian byte order in output
+      --le                      same as --little-endian
+                                Default is big-endian (network byte order)
+
+Metadata embedding:
+  -m, --meta KEY VALUE          add metadata key-value pair
+      --tag KEY VALUE           same as --meta
+      --jsonmeta FILE           embed metadata from JSON file
+      --jm FILE                 same as --jsonmeta
+      --vorbis-meta FILE        embed Vorbis comment format metadata
+      --vm FILE                 same as --vorbis-meta
+      --image FILE              embed cover image (JPEG/PNG/GIF/BMP)
+      --img FILE                same as --image
+
+Informative output:
+  -v, --loglevel N              set log verbosity level (0-1)
+                                0: errors only, 1: informational
+
+Examples:
+  {frad} encode input.pcm --sr 44100 --ch 2 --bits 16 -o output.frad
+  {frad} enc - --srate 48000 --channels 2 --b 24 < input.raw > output.frad
+  {frad} encode audio.pcm --sr 44100 --ch 2 --profile 1 --loss-level 5
+
+Full documentation is maintained as a Texinfo manual (which doesn't exist).
+Report bugs to: life-frad-bugs@gnu.org (also doesn't exist)

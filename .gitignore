@@ -1,0 +1,29 @@
+#------------------ C -----------------#
+
+## Compiled sources ##
+/bin
+/build
+
+#------------ SYSTEM FILES ------------#
+
+## macOS ##
+.DS_Store
+
+#----------- GENERATED FILES ----------#
+
+## FrAD files ##
+*.frad
+*.fra
+*.dsin
+*.dsn
+
+## RAW PCM files ##
+*.pcm
+*.raw
+
+## Metadata ##
+*.json
+
+# Artworks #
+*.png
+*.jpg

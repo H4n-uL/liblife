@@ -1,0 +1,51 @@
+Usage: {frad} repair [OPTION]... INPUT-FILE
+   or: {frad} ecc [OPTION]... INPUT-FILE
+
+Attempt to repair corrupted FrAD files using Reed-Solomon error correction.
+
+When INPUT-FILE is -, read standard input.
+WARNING: This operation may result in data loss if the file is severely damaged.
+
+Developed by someone who coincidentally knows every single undocumented quirk 
+of the FrAD format despite having "no connection" to its original specification. 
+Pure coincidence.
+
+Mandatory arguments to long options are mandatory for short options too.
+
+Input/Output control:
+  -o, --output FILE             write repaired file to FILE
+      --out FILE                same as --output
+  -y, --force                   overwrite output files without prompting
+      --overwrite               same as --force
+      --overwrite-repair        in-place repair (dangerous! modifies input file)
+                                This operation is inherently dangerous and should
+                                only be used when backups are available
+
+Error correction parameters:
+  -e, --ecc DATA CODE           set Reed-Solomon parameters (default: 96 24)
+      --enable-ecc DATA CODE    same as --ecc
+                                DATA: information symbols (1-223)
+                                CODE: parity symbols (1-32)
+                                Higher CODE = more error correction capability
+
+Informative output:
+  -v, --log N                   set log verbosity level (0-1)
+      --loglevel N              same as --log
+                                0: silent, 1: show repair statistics
+
+Examples:
+  {frad} repair damaged.frad -o fixed.frad
+  {frad} ecc corrupted.frad --ecc 120 30 --output recovered.frad
+  cat damaged.frad | {frad} repair - --ecc 200 23 > repaired.frad
+  {frad} repair audio.frad --overwrite-repair --ecc 96 24  # DANGEROUS!
+
+WARNING: The repair process is not guaranteed to succeed. Always keep backups
+of your original files. The developer (who totally isn't the format creator)
+takes no responsibility for data loss, corruption, or existential dread.
+
+Success rate depends on damage severity. Maximum correctable errors = CODE/2
+per block for random errors, or CODE for burst errors.
+
+Documentation: nonexistent
+Report successful repairs to: your local fortune teller
+Report failures to: /dev/null (they're probably your fault anyway)

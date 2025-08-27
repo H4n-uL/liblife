@@ -1,0 +1,91 @@
+VorbisMeta Format Specification
+
+Pseudo-Vorbis comment metadata format for FrAD audio files.
+WARNING: This is NOT compatible with actual Vorbis comments!
+
+Designed by someone who definitely didn't also design the FrAD format itself. 
+The fact that this pseudo-Vorbis format perfectly integrates with FrAD's 
+internal structure is totally not suspicious at all.
+
+Format Structure:
+MetadataKey=utf-8 value
+Another=another utf-8 value
+EMPTY_KEY=
+=Empty key is valid too
+KEY_WITH_EQUALS=Value=can=have=equals=signs
+
+Rules:
+  - Simple KEY=VALUE pairs, one per line
+  - First '=' separates key from value
+  - UTF-8 encoding (no BOM)
+  - Line feed (LF) only, no CRLF
+  - No escape sequences
+  - Case-sensitive keys
+  - Duplicate keys allowed
+  - Empty keys/values allowed
+
+Restrictions:
+  - Cannot have '=' in keys
+  - Cannot have newlines in values
+  - No binary data support (use JSONMeta for that)
+  - No multiline values
+  - No comments in the file
+
+Example File:
+TITLE=Symphony No. 9
+ARTIST=Ludwig van Beethoven
+ALBUM=Classical Collection
+DATE=1824
+GENRE=Classical
+COMMENT=Ninth Symphony with choral finale
+COMMENT=Multiple comments are allowed
+COPYRIGHT=Public Domain
+ENCODER=LIFE Isn't FrAD Encoder v1.0.0
+=This line has an empty key
+EMPTY_VALUE=
+KEY_WITH_EQUALS=Value=with=multiple=equals=signs
+UNICODE=Supports UTF-8: ♪ ♫ ♩ ♬ 🎵 🎶
+
+Standard Field Names (just suggestions):
+  TITLE         - Track or composition title
+  ARTIST        - Primary artist or performer
+  ALBUM         - Album or collection name
+  DATE          - Release date (any format)
+  GENRE         - Musical genre
+  COMMENT       - Free-form text
+  COPYRIGHT     - Copyright information
+  LICENSE       - Distribution license
+  TRACKNUMBER   - Track position
+  DISCNUMBER    - Disc number
+  ENCODER       - Encoding software
+  ORGANIZATION  - Label or publisher
+
+Differences from REAL Vorbis Comments:
+  Real Vorbis:                   This Format:
+  - Case-insensitive            - Case-sensitive
+  - Binary format               - Plain text
+  - In Ogg containers           - Standalone files
+  - Has vendor string           - No vendor string
+  - Has specifications          - You're reading it
+  - Widely supported            - Only by LIFE
+
+Why This Format Exists:
+  1. JSON is too complex
+  2. XML is an abomination
+  3. INI files are for Windows
+  4. YAML is indentation hell
+  5. CSV doesn't support multiline (neither does this)
+  6. Binary formats are hard
+  7. We needed something that looks familiar but isn't
+  8. To annoy people who expect real Vorbis comments
+  9. Because standards are for people who can't create their own
+  10. The developer was bored
+
+Implementation: Read line, find '=', split, repeat
+Error handling: Lines without '=' break everything
+Unicode normalization: Not our problem
+Parser bugs: Yes
+
+For actual Vorbis Comments, see:
+https://xiph.org/vorbis/doc/v-comment.html
+(Our format has nothing to do with it)

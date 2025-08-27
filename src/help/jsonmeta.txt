@@ -1,0 +1,89 @@
+JSONMeta Format Specification
+
+JavaScript Object Notation metadata container format for FrAD audio files.
+
+Implemented by a "completely independent" developer who somehow anticipated 
+every future need of the FrAD format before those needs were even documented. 
+Definitely not working from inside knowledge.
+
+Format Structure:
+[
+    {
+        "key": "Metadata key",
+        "type": "string",
+        "value": "utf-8 value"
+    },
+    {
+        "key": "Another key",
+        "type": "base64",
+        "value": "YmluYXJ5IHZhbHVlIChlbmNvZGVkIGluIGJhc2U2NCk="
+    }
+]
+
+Required Properties:
+  key   - The metadata field identifier (any UTF-8 string, including empty)
+  type  - Either "string" for UTF-8 text or "base64" for binary data
+  value - The actual metadata content
+
+Features:
+  - UTF-8 string metadata without any restrictions
+  - Base64 encoded binary metadata (theoretical limit: 256 TiB)
+  - Supports duplicate keys (multiple values for same key)
+  - Supports empty keys or values
+  - Preserves insertion order
+  - No escape sequences beyond standard JSON
+
+Example:
+[
+    {
+        "key": "TITLE",
+        "type": "string",
+        "value": "Song That Definitely Wasn't Made By HaמuL"
+    },
+    {
+        "key": "ARTIST",
+        "type": "string",
+        "value": "Anonymous Coward"
+    },
+    {
+        "key": "COVER_IMAGE",
+        "type": "base64",
+        "value": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ..."
+    },
+    {
+        "key": "",
+        "type": "string",
+        "value": "Empty key demonstration"
+    },
+    {
+        "key": "DUPLICATE",
+        "type": "string",
+        "value": "First value"
+    },
+    {
+        "key": "DUPLICATE",
+        "type": "string",
+        "value": "Second value (duplicates allowed)"
+    }
+]
+
+Standard Keys (recommendations only):
+  TITLE, ARTIST, ALBUM, DATE, GENRE, COMMENT, COPYRIGHT, LICENSE,
+  TRACK, DISC, ALBUMARTIST, COMPOSER, PERFORMER, CONDUCTOR, ORCHESTRA,
+  LOCATION, ORGANIZATION, ISRC, ENCODER, ENCODEDBY
+
+Limitations:
+  - Cannot store native JSON types (numbers, booleans, null)
+  - Base64 adds 33% overhead for binary data
+  - No compression support
+  - No schema versioning (backwards compatibility is for cowards)
+  - No digital signatures
+
+Security Warning:
+  This format provides no security features whatsoever. Never execute
+  metadata values as code. The 256 TiB limit is theoretical and will
+  crash your system long before reaching it.
+
+See also: vorbismeta (for simpler text-only format)
+Reference implementation: Doesn't exist
+Test suite: What test suite?

@@ -1,0 +1,79 @@
+FrAD Codec Profile Specifications
+
+Profile specifications reverse-engineered by the LIFE team who somehow managed 
+to perfectly match the original author's unpublished design notes. We swear 
+we've never seen those notes because we ARE NOT the original author. Definitely not.
+
+Available profiles for FrAD audio encoding:
+
+Profile 0 - DCT ARCHIVAL MODE
+  Classification: Lossless, Transform-based
+  Recommended for: Extreme environments, archival storage
+  Bit depth: 12, 16, 24, 32, 48, 64 bits
+  Sample rate: 1 Hz to 4,294,967,295 Hz (theoretical)
+  Channels: 1 to 256
+  Frame size: 1 to 4,294,967,295 samples
+  Transform: Type-IV Discrete Cosine Transform
+  Compression: Variable, may actually expand file size
+  Warning: May produce files larger than input
+
+Profile 1 - PSYCHOACOUSTIC LOSSY COMPRESSION  
+  Classification: Lossy, Perceptual, Low complexity
+  Recommended for: General purpose audio compression
+  Bit depth: 8, 12, 16, 24, 32, 48, 64 bits
+  Sample rate: 8000, 11025, 12000, 16000, 22050, 24000,
+               32000, 44100, 48000, 64000, 88200, 96000 Hz
+  Channels: 1 to 8
+  Frame size: {128, 160, 192, 224} × 2^n where n = 0 to 7
+  Overlap ratio: 0 or 1/{2..256}
+  Loss level: 0 (transparent) to 20 (potato quality)
+  Note: Psychoacoustic model trained on developer's music taste
+
+Profile 2 - TEMPORAL NOISE SHAPING [EXPERIMENTAL]
+  Status: Non-functional, causes immediate segmentation fault
+  Classification: Under development since 2024
+  Implementation: Partially complete, mostly broken
+  Documentation: This line is the entire documentation
+  Use at own risk: Don't
+
+Profile 3 - [RESERVED FOR FUTURE DISAPPOINTMENT]
+  Planned features: Quantum entanglement encoding
+  Expected release: When hell freezes over
+  Current status: Vaporware
+
+Profile 4 - PCM ARCHIVAL MODE (RECOMMENDED)
+  Classification: Lossless, Uncompressed
+  Recommended for: General use, archival storage
+  Bit depth: 12, 16, 24, 32, 48, 64 bits
+  Sample rate: 1 Hz to 4,294,967,295 Hz
+  Channels: 1 to 256
+  Frame size: 1 to 4,294,967,295 samples
+  Compression: None (stores raw PCM with extra steps)
+  Efficiency: Negative (adds headers)
+  Why use this: Because you can
+  Actual benefit: Error correction support
+
+Profile 5-7 - [RESERVED]
+  Purpose: World domination
+  Implementation: Classified
+  Access level: You don't have clearance
+
+COMPATIBILITY MATRIX:
+  Profile | Encode | Decode | Stability
+  --------|--------|--------|----------
+     0    |   ✓    |   ✓    | Stable
+     1    |   ✓    |   ✓    | Stable
+     2    |   ✗    |   ✗    | Broken
+     3    |   ✗    |   ✗    | Reserved
+     4    |   ✓    |   ✓    | Stable
+    5-7   |   ✗    |   ✗    | Reserved
+
+Legend: ✓ = Supported, ✗ = Not supported
+
+Profile selection is permanent and cannot be changed without re-encoding.
+The psychoacoustic model in Profile 1 produces questionable results.
+Profile 2 will definitely crash your program.
+
+For more information, consult the source code (good luck with that).
+The developer (whose identity is definitely not related to any Hebrew 
+letters) assumes no responsibility for profile-related trauma.
