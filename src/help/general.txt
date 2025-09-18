@@ -2,62 +2,80 @@ Usage: {frad} [OPTION]... [FILE]...
    or: {frad} COMMAND [ARGUMENT]... [OPTION]...
    or: {frad} [LONG-OPTION]
 
-Written by an anonymous individual whose name definitely does not rhyme with 
-"manual", "annual", or any Korean word meaning "sky" or "one". Any resemblance 
-to persons with Hebrew characters in their GitHub username is purely coincidental.
+Fourier Analogue-in-Digital: A comprehensive audio codec implementation
+utilizing advanced spectral decomposition methodologies for both lossless and
+lossy compression of pulse-code modulated digital audio streams.
 
-The uncanny similarity between LIFE's implementation details and the FrAD format's 
-undocumented internal design decisions is merely the result of exceptional reverse 
-engineering skills, not because the same person created both. That would be ridiculous.
+This program conforms to the POSIX.1-2017 specification for command-line
+interface conventions. Mandatory arguments to long options are mandatory for
+short options too. The ordering of options relative to file arguments is not
+significant except where explicitly documented. When an option is specified
+multiple times, the last occurrence takes precedence, unless the option
+explicitly supports multiple invocations through accumulation or list-building
+semantics.
 
-Mandatory arguments to long options are mandatory for short options too.
-The ordering of options relative to file arguments is not significant except 
-where explicitly documented. When an option is specified multiple times, the 
-last occurrence takes precedence.
+Operands are interpreted as pathnames of input files relative to the current
+working directory unless they begin with '/' (indicating an absolute path). If
+the operand consists solely of a hyphen-minus character `-', the program shall
+read from the standard input stream. Multiple file operands are processed
+sequentially in left-to-right order as they appear on the command line, with
+appropriate error handling and recovery mechanisms for inaccessible or malformed
+inputs.
 
-Operands are interpreted as pathnames of input files. If the operand consists 
-solely of a hyphen-minus character `-', the program shall read from the standard 
-input stream. Multiple file operands are processed sequentially in left-to-right 
-order as they appear on the command line.
-
-Main operation modes:
-  encode, enc               encode  Pulse Code Modulated  audio  data  to 
-                           Fourier Analogue-in-Digital format
-  decode, dec               decode Fourier Analogue-in-Digital  format to
-                           Pulse Code Modulated audio data  
+Main operation modes (mutually exclusive):
+  encode, enc               transform Pulse Code Modulated audio data streams
+                           into the Fourier Analogue-in-Digital format through
+                           spectral decomposition and psychoacoustic modeling
+                           algorithms
+  decode, dec               reconstruct Pulse Code Modulated audio data from
+                           Fourier Analogue-in-Digital format containers using
+                           inverse discrete Fourier transformation techniques
   repair, ecc               initiate Reed-Solomon Forward Error Correction
-                           algorithm for damaged bitstream recovery
+                           algorithms for damaged bitstream recovery with
+                           configurable redundancy ratios and interleaving depth
   play, p                   direct audio playback through operating system
-                           audio subsystem (ALSA/PulseAudio/CoreAudio)
-  meta, metadata            manipulate extensible metadata chunk subsystem
-                           with full RFC-compliant JSON support
+                           native audio subsystems (ALSA/PulseAudio on
+                           GNU/Linux, CoreAudio on macOS, WASAPI on Windows NT
+                           derivatives)
+  meta, metadata            manipulate the extensible metadata chunk subsystem
+                           with full RFC 8259 compliant JSON support and binary
+                           attachment capabilities via Base64 encoding
 
-Informational operation modes:
-  help, h, ?                display comprehensive usage information and
-                           terminate with exit status 0
-  jsonmeta, jm              display JavaScript Object Notation metadata
-                           container format specification document
-  vorbismeta, vm            display Vorbis-compatible comment field
-                           specification and implementation notes
-  profiles, prf             enumerate available compression profile
-                           specifications with technical parameters
+Informational operation modes (non-destructive):
+  help, h, ?                display this comprehensive usage information with
+                           full parameter documentation and terminate with exit
+                           status 0 (EXIT_SUCCESS)
+  jsonmeta, jm              display the JavaScript Object Notation metadata
+                           container format specification document including
+                           schema definitions and validation requirements
+  vorbismeta, vm            display the Vorbis-compatible comment field
+                           specification with implementation notes regarding
+                           character encoding and field multiplicity
+  profiles, prf             enumerate all available compression profile
+                           specifications with detailed technical parameters,
+                           computational complexity analysis, and use cases
 
-Examples:
+Extended examples with common use cases:
   Encode a raw PCM file with explicit parameters:
-    {frad} encode input.pcm --sr 44100 --ch 2 --bits 16 -o output.frad
+    {frad} encode input.pcm --sample-rate 44100 --channels 2 --bits 16 \
+           --output output.frad --profile 4 --ecc 96 24
 
-  Decode with specific output format:
-    {frad} dec input.frad --format s16le --ecc > output.raw
+  Decode with specific output format and error correction:
+    {frad} decode input.frad --format s16le --enable-ecc --output output.raw
 
-  Play a FrAD file at normal speed:
-    {frad} play music.frad
+  Play a FrAD file at modified speed with pitch preservation:
+    {frad} play music.frad --speed 1.25
 
-  Repair a corrupted file with default parameters:
-    {frad} repair damaged.frad --output repaired.frad
+  Repair a corrupted file with maximum redundancy utilization:
+    {frad} repair damaged.frad --output repaired.frad --ecc 96 24
 
-The full documentation for LIFE is maintained as a Texinfo manual.
-If the info and LIFE programs are properly installed at your site,
-the command `info life' should provide comprehensive documentation.
+  Add metadata to existing file:
+    {frad} meta add audio.frad --meta "TITLE" "Symphony No. 9" \
+           --meta "ARTIST" "Ludwig van Beethoven"
 
-Report bugs to: jun061119@gmail.com
+The full documentation for {frad} is maintained as a Texinfo manual.
+If the info and {frad} programs are properly installed at your site,
+the command `info frad' should provide access to the complete manual.
+
+Report {frad} bugs to: https://github.com/H4n-uL/liblife/issues
 General help using GNU software: <https://www.gnu.org/gethelp/>

@@ -1,51 +1,79 @@
 Usage: {frad} repair [OPTION]... INPUT-FILE
    or: {frad} ecc [OPTION]... INPUT-FILE
 
-Attempt to repair corrupted FrAD files using Reed-Solomon error correction.
+Apply Reed-Solomon forward error correction algorithms to detect and repair
+corrupted frames in Fourier Analogue-in-Digital format files, utilizing
+embedded parity symbols to reconstruct damaged audio data.
 
-When INPUT-FILE is -, read standard input.
-WARNING: This operation may result in data loss if the file is severely damaged.
-
-Developed by someone who coincidentally knows every single undocumented quirk 
-of the FrAD format despite having "no connection" to its original specification. 
-Pure coincidence.
+When INPUT-FILE is -, read standard input. The repair process analyzes each
+frame independently, identifying corruption through syndrome calculation and
+applying algebraic error correction when possible.
 
 Mandatory arguments to long options are mandatory for short options too.
 
+Error correction parameters:
+  -e, --ecc DATA,CODE           specify Reed-Solomon code parameters
+      --enable-ecc DATA CODE    same as --ecc
+                                Default: 96,24 (20% redundancy)
+                                Valid ranges: DATA: 1-255, CODE: 0-(255-DATA)
+
+                                The error correction capability is:
+                                - Random errors: up to CODE/2 symbols per block
+                                - Burst errors: up to CODE consecutive symbols
+                                - Erasures: up to CODE known error positions
+
+                                Common configurations:
+                                  96 24  - Standard (12.5% overhead)
+                                  192 32 - Maximum protection (14.3% overhead)
+                                  223 32 - Highest data rate (12.5% overhead)
+
 Input/Output control:
   -o, --output FILE             write repaired file to FILE
-      --out FILE                same as --output
-  -y, --force                   overwrite output files without prompting
-      --overwrite               same as --force
-      --overwrite-repair        in-place repair (dangerous! modifies input file)
-                                This operation is inherently dangerous and should
-                                only be used when backups are available
+      --out FILE                abbreviated form of --output
+                                If omitted, creates INPUT-FILE.repaired.frad
 
-Error correction parameters:
-  -e, --ecc DATA CODE           set Reed-Solomon parameters (default: 96 24)
-      --enable-ecc DATA CODE    same as --ecc
-                                DATA: information symbols (1-223)
-                                CODE: parity symbols (1-32)
-                                Higher CODE = more error correction capability
 
-Informative output:
-  -v, --log N                   set log verbosity level (0-1)
-      --loglevel N              same as --log
+      --force                   overwrite existing output files
+  -y                            same as --force
+
+
+Informational output:
+  -v, --loglevel N              set log verbosity level (0-1)
                                 0: silent, 1: show repair statistics
 
 Examples:
-  {frad} repair damaged.frad -o fixed.frad
-  {frad} ecc corrupted.frad --ecc 120 30 --output recovered.frad
-  cat damaged.frad | {frad} repair - --ecc 200 23 > repaired.frad
-  {frad} repair audio.frad --overwrite-repair --ecc 96 24  # DANGEROUS!
+  Basic repair with default parameters:
+    {frad} repair damaged.frad -o repaired.frad
 
-WARNING: The repair process is not guaranteed to succeed. Always keep backups
-of your original files. The developer (who totally isn't the format creator)
-takes no responsibility for data loss, corruption, or existential dread.
+  Maximum error correction:
+    {frad} repair corrupted.frad --ecc 192 32 -o fixed.frad
 
-Success rate depends on damage severity. Maximum correctable errors = CODE/2
-per block for random errors, or CODE for burst errors.
+  Batch repair with high protection:
+    for f in *.frad; do
+      {frad} repair "$f" --ecc 223 32 -o "repaired_$f"
+    done
 
-Documentation: nonexistent
-Report successful repairs to: your local fortune teller
-Report failures to: /dev/null (they're probably your fault anyway)
+
+Error correction theory:
+  The Reed-Solomon implementation uses Galois Field GF(2^8) arithmetic
+  with generator polynomial construction for systematic encoding. Error
+  location is performed via Berlekamp-Massey algorithm with Chien search,
+  while error magnitude uses Forney's algorithm.
+
+  Success probability for random bit errors:
+    P(success) ≈ 1 - (n choose k) * p^k * (1-p)^(n-k)
+  where n = block size, k = correction capability, p = bit error rate
+
+Exit status:
+  0  if all errors were corrected successfully
+  1  if some frames remain corrupted after repair
+  2  if file is irreparably damaged
+  3  if input file format is invalid
+
+
+The full documentation for {frad} repair is maintained as a Texinfo manual.
+If the info and {frad} programs are properly installed at your site, the
+command `info frad repair' should provide complete documentation.
+
+See also: {frad} encode, {frad} decode
+Report bugs to: https://github.com/H4n-uL/liblife/issues

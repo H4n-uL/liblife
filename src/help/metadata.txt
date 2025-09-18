@@ -1,70 +1,144 @@
 Usage: {frad} meta META-ACTION [OPTION]... INPUT-FILE
    or: {frad} metadata META-ACTION [OPTION]... INPUT-FILE
 
-Manipulate metadata chunks embedded in FrAD files.
+Manipulate extensible metadata chunks embedded within
+Fourier Analogue-in-Digital format files, supporting multiple encoding schemes
+and hierarchical data structures.
 
-META-ACTION must be one of: add, remove, rm-img, overwrite, parse
-
-Created by developers who mysteriously implemented metadata chunks exactly as 
-the format creator would have intended, despite having "never met" said creator. 
-What a remarkable coincidence of great minds thinking alike.
+META-ACTION specifies the operation to perform on the metadata chunk.
+Valid actions: add, remove, rm-img, overwrite, parse
 
 Mandatory arguments to long options are mandatory for short options too.
 
-Available metadata actions:
-  add                           append metadata to existing tags
-  remove                        selectively remove metadata entries
-  rm-img                        remove embedded cover image
-  overwrite                     replace all metadata (destructive)
-  parse                         extract metadata to JSON format
+Metadata actions (mutually exclusive):
+  add         Append new metadata entries to existing metadata chunk
+              Preserves existing entries while adding new key-value pairs
+              Duplicate keys are permitted and accumulate
 
-Action-specific options:
+  remove      Selectively remove metadata entries by key
+              Removes all entries matching the specified key
+              Preserves all other metadata and embedded images
 
-For 'add' and 'overwrite':
+  rm-img      Remove embedded cover artwork image
+              Preserves all text metadata entries
+              This operation is irreversible
+
+  overwrite   Replace entire metadata chunk with new data
+              WARNING: Destroys all existing metadata
+              Use with caution on files with existing metadata
+
+  parse       Extract and export metadata to structured format
+              Outputs JSON representation of all metadata
+              Includes Base64-encoded binary attachments
+
+Action-specific parameters:
+
+For actions 'add' and 'overwrite':
   -m, --meta KEY VALUE          add metadata key-value pair
       --tag KEY VALUE           same as --meta
-      --jsonmeta FILE           import metadata from JSON file
-      --jm FILE                 same as --jsonmeta
-      --vorbis-meta FILE        import Vorbis comment format
-      --vm FILE                 same as --vorbis-meta
-      --image FILE              embed cover art image
-      --img FILE                same as --image
+                                Multiple invocations accumulate entries
+                                Keys are case-sensitive UTF-8 strings
+                                Values support full Unicode range
 
-For 'remove':
+      --jsonmeta FILE           import metadata from JSON format file
+      --jm FILE                 abbreviated form of --jsonmeta
+                                See '{frad} jsonmeta' for format specification
+                                Supports structured and binary metadata
+
+      --vorbis-meta FILE        import Vorbis comment format metadata
+      --vm FILE                 abbreviated form of --vorbis-meta
+                                See '{frad} vorbismeta' for format details
+                                Simple key=value text format
+
+      --image FILE              embed album artwork or cover image
+      --img FILE                abbreviated form of --image
+                                Supported formats: JPEG, PNG, GIF, BMP, WebP
+                                Maximum size: 16 MB (recommended: < 1 MB)
+                                Replaces existing image if present
+
+For action 'remove':
   -m, --meta KEY                specify metadata key to remove
-      --tag KEY                 same as --meta
+      --tag KEY                 alternative form
+                                Removes ALL entries with this key
+                                Case-sensitive matching
+                                Use quotes for keys with spaces
 
-For 'rm-img':
-  No additional options required. This action cannot be undone.
-  
-For 'parse':
-  -o, --output FILE             write parsed metadata to FILE
-      --out FILE                same as --output
-                                Default: write to stdout
+For action 'rm-img':
+  No additional parameters required.
+  Removes the embedded image while preserving all text metadata.
+
+For action 'parse':
+  -o, --output FILE             write extracted metadata to FILE
+      --out FILE                abbreviated form of --output
+                                Default: write to standard output
+                                Format: JSON with proper indentation
+
 
 Global options:
-  -y, --force                   overwrite files without confirmation
-      --overwrite               same as --force
-      --overwrite-repair        force overwrite for repair operations
-  -v, --loglevel N              set log verbosity level (0-3)
+      --force                   overwrite without confirmation
+  -y                            same as --force
 
-Metadata key conventions:
-  Standard keys: TITLE, ARTIST, ALBUM, DATE, GENRE, COMMENT
-  Custom keys: Anything else (use UPPERCASE by convention)
-  Reserved keys: Keys starting with underscore are system-reserved
+Metadata key naming conventions:
+  Standard fields (recommended for compatibility):
+    TITLE         - Track or work title
+    ARTIST        - Primary artist or performer
+    ALBUM         - Album or collection name
+    DATE          - Release date (ISO 8601 format preferred)
+    GENRE         - Musical genre classification
+    COMMENT       - Free-form annotations
+    COPYRIGHT     - Copyright notice
+    LICENSE       - Distribution license
+    TRACKNUMBER   - Track sequence number
+    DISCNUMBER    - Disc or volume number
+    ALBUMARTIST   - Album's primary artist
+    COMPOSER      - Original composer
+    PERFORMER     - Performance credits
+    CONDUCTOR     - Orchestra conductor
+    ORGANIZATION  - Label or publisher
+    ISRC          - International Standard Recording Code
+    ENCODER       - Encoding software and settings
 
-WARNING: Metadata operations directly modify the input file unless
---output is specified. Always backup important files before editing.
-The person who wrote this (initials may or may not be H.L.) disclaims
-all responsibility for corrupted files, lost metadata, or existential crisis.
+  Custom fields:
+    Any UTF-8 string not starting with underscore
+    Convention: Use UPPERCASE for consistency
+    Examples: MOOD, BPM, KEY, RATING, LYRICS
+
+  Reserved fields:
+    _* (underscore prefix) - System use only
+    Do not create or modify these fields
 
 Examples:
-  {frad} meta add song.frad --meta ARTIST "Your name" --meta YEAR 2025
-  {frad} metadata parse song.frad -o metadata.json
-  {frad} meta overwrite song.frad --jm new_tags.json --img cover.jpg
-  {frad} meta remove song.frad --meta COMMENT
-  {frad} meta rm-img album.frad
+  Add metadata to existing file:
+    {frad} meta add song.frad --meta ARTIST Bach --meta YEAR 1721
 
-See also: jsonmeta, vorbismeta (if you can find the documentation)
-Metadata specification: Undocumented, reverse-engineer at your own risk
-Bug reports: Thrown directly into /dev/null with extreme prejudice
+  Import metadata from JSON and add cover:
+    {frad} meta add album.frad --jsonmeta tags.json --image cover.jpg
+
+  Replace all metadata:
+    {frad} meta overwrite file.frad --vm new_tags.txt
+
+  Extract metadata to file:
+    {frad} meta parse collection.frad --output metadata.json
+
+  Remove specific metadata key:
+    {frad} meta remove audio.frad --meta COMMENT
+
+  Remove cover image only:
+    {frad} meta rm-img podcast.frad
+
+  Batch processing:
+    for f in *.frad; do
+      {frad} meta add "$f" --meta PROCESSED "$(date)"
+    done
+
+Exit status:
+  0  if operation completed successfully
+  1  if errors occurred
+  2  if action or parameters are invalid
+
+The full documentation for {frad} metadata is maintained as a Texinfo manual.
+If the info and {frad} programs are properly installed at your site, the
+command `info frad metadata' should provide complete documentation.
+
+See also: {frad} jsonmeta, {frad} vorbismeta
+Report bugs to: https://github.com/H4n-uL/liblife/issues

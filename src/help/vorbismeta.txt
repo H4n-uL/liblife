@@ -1,91 +1,261 @@
-VorbisMeta Format Specification
+VorbisMeta Format Specification - Version 1.0
 
-Pseudo-Vorbis comment metadata format for FrAD audio files.
-WARNING: This is NOT compatible with actual Vorbis comments!
+A simplified plain-text metadata format for Fourier Analogue-in-Digital audio
+files, inspired by but not compatible with Xiph.Org Vorbis comments.
 
-Designed by someone who definitely didn't also design the FrAD format itself. 
-The fact that this pseudo-Vorbis format perfectly integrates with FrAD's 
-internal structure is totally not suspicious at all.
+FORMAT OVERVIEW
 
-Format Structure:
-MetadataKey=utf-8 value
-Another=another utf-8 value
-EMPTY_KEY=
-=Empty key is valid too
-KEY_WITH_EQUALS=Value=can=have=equals=signs
+The VorbisMeta format stores metadata as newline-delimited key-value pairs
+using UTF-8 encoding. This format prioritizes human readability and ease of
+implementation over feature completeness.
 
-Rules:
-  - Simple KEY=VALUE pairs, one per line
-  - First '=' separates key from value
-  - UTF-8 encoding (no BOM)
-  - Line feed (LF) only, no CRLF
-  - No escape sequences
-  - Case-sensitive keys
-  - Duplicate keys allowed
-  - Empty keys/values allowed
+SYNTAX SPECIFICATION
 
-Restrictions:
-  - Cannot have '=' in keys
-  - Cannot have newlines in values
-  - No binary data support (use JSONMeta for that)
-  - No multiline values
-  - No comments in the file
+General Structure:
+  KEY=VALUE\n
+  Where:
+  - KEY is a UTF-8 string not containing '=' or newline characters
+  - '=' is the delimiter (first occurrence only)
+  - VALUE is a UTF-8 string not containing newline characters
+  - \n is a single line feed character (0x0A)
 
-Example File:
-TITLE=Symphony No. 9
+FORMAL GRAMMAR (ABNF Notation):
+
+  document     = *entry
+  entry        = key "=" value LF
+  key          = *key-char
+  value        = *value-char
+  key-char     = %x01-3C / %x3E-09 / %x0B-10FFFF  ; Any UTF-8 except '=' and LF
+  value-char   = %x01-09 / %x0B-10FFFF            ; Any UTF-8 except LF
+  LF           = %x0A                              ; Line feed
+
+ENCODING RULES
+
+1. Character Encoding:
+   - File must be valid UTF-8 without Byte Order Mark (BOM)
+   - No normalization required (preserve original form)
+   - Invalid UTF-8 sequences cause parse failure
+
+2. Line Endings:
+   - Unix-style line feeds only (LF, 0x0A)
+   - Carriage returns (CR, 0x0D) are treated as data
+   - No line continuation mechanism
+
+3. Delimiter Rules:
+   - First '=' character separates key from value
+   - Subsequent '=' characters are part of the value
+   - Lines without '=' are invalid and cause parse failure
+
+4. Whitespace Handling:
+   - Leading/trailing whitespace is significant (preserved)
+   - No automatic trimming of keys or values
+   - Spaces around '=' are part of key/value respectively
+
+5. Special Cases:
+   - Empty keys are permitted (line starts with '=')
+   - Empty values are permitted (line ends with '=')
+   - Blank lines are not permitted
+   - Comment lines are not supported
+
+FEATURES AND CAPABILITIES
+
+Supported:
+  ✓ UTF-8 text including emoji and special characters
+  ✓ Duplicate keys (multiple values for same key)
+  ✓ Empty keys and empty values
+  ✓ Values containing '=' characters
+  ✓ Preservation of whitespace
+  ✓ Unlimited key/value length (memory permitting)
+  ✓ Case-sensitive key matching
+
+Not Supported:
+  ✗ Binary data (use JSONMeta format instead)
+  ✗ Multi-line values
+  ✗ Escape sequences
+  ✗ Comments or annotations
+  ✗ Structured data (arrays, objects)
+  ✗ Type information
+  ✗ Character escaping
+  ✗ Key namespaces
+
+CANONICAL EXAMPLE
+
+TITLE=Symphony No. 9 in D minor, Op. 125
 ARTIST=Ludwig van Beethoven
-ALBUM=Classical Collection
-DATE=1824
+ALBUM=The Nine Symphonies
+DATE=1824-05-07
 GENRE=Classical
-COMMENT=Ninth Symphony with choral finale
-COMMENT=Multiple comments are allowed
+COMMENT=Premiere performance in Vienna
+COMMENT=Includes "Ode to Joy" choral finale
 COPYRIGHT=Public Domain
-ENCODER=LIFE Isn't FrAD Encoder v1.0.0
-=This line has an empty key
+PERFORMER=Vienna Philharmonic Orchestra
+CONDUCTOR=Herbert von Karajan
+RECORDINGDATE=1962-11
+LABEL=Deutsche Grammophon
+CATALOGNUMBER=453 701-2
+ISRC=DEDG6201234
+ENCODER=FrAD Reference Encoder v1.0.0
+ENCODINGSETTINGS=--profile 4 --ecc 96,24
+REPLAYGAIN_TRACK_GAIN=-6.21 dB
+CUSTOM_FIELD=Application-specific data
+=This entry has an empty key
 EMPTY_VALUE=
-KEY_WITH_EQUALS=Value=with=multiple=equals=signs
-UNICODE=Supports UTF-8: ♪ ♫ ♩ ♬ 🎵 🎶
+EQUALS_IN_VALUE=key=value=with=many=equals
+UTF8_SUPPORT=Supports Unicode: ♪♫♩♬ 🎵🎶 中文 عربي
+  WHITESPACE  =  Preserved exactly as entered
+special!@#$%^&*()=Value with special characters in key
 
-Standard Field Names (just suggestions):
-  TITLE         - Track or composition title
-  ARTIST        - Primary artist or performer
-  ALBUM         - Album or collection name
-  DATE          - Release date (any format)
-  GENRE         - Musical genre
-  COMMENT       - Free-form text
-  COPYRIGHT     - Copyright information
-  LICENSE       - Distribution license
-  TRACKNUMBER   - Track position
-  DISCNUMBER    - Disc number
-  ENCODER       - Encoding software
-  ORGANIZATION  - Label or publisher
+STANDARD FIELD DEFINITIONS
 
-Differences from REAL Vorbis Comments:
-  Real Vorbis:                   This Format:
-  - Case-insensitive            - Case-sensitive
-  - Binary format               - Plain text
-  - In Ogg containers           - Standalone files
-  - Has vendor string           - No vendor string
-  - Has specifications          - You're reading it
-  - Widely supported            - Only by LIFE
+Core Fields (Recommended):
+  TITLE         Track or work title
+  ARTIST        Primary artist or performer
+  ALBUM         Album or collection name
+  DATE          Release date (ISO 8601 format preferred)
+  GENRE         Musical genre or style
+  COMMENT       Free-form annotations (may appear multiple times)
+  COPYRIGHT     Copyright notice or status
+  LICENSE       Distribution license identifier
 
-Why This Format Exists:
-  1. JSON is too complex
-  2. XML is an abomination
-  3. INI files are for Windows
-  4. YAML is indentation hell
-  5. CSV doesn't support multiline (neither does this)
-  6. Binary formats are hard
-  7. We needed something that looks familiar but isn't
-  8. To annoy people who expect real Vorbis comments
-  9. Because standards are for people who can't create their own
-  10. The developer was bored
+Extended Fields (Optional):
+  ALBUMARTIST   Album's primary artist (for compilations)
+  TRACKNUMBER   Track sequence (e.g., "5" or "5/12")
+  DISCNUMBER    Disc number for multi-disc sets
+  COMPOSER      Original composer of the work
+  PERFORMER     Individual performer credits
+  CONDUCTOR     Orchestra or ensemble conductor
+  ORCHESTRA     Orchestra or ensemble name
+  OPUS          Opus number for classical works
+  PRODUCER      Production credits
+  ENGINEER      Recording/mixing engineer
+  LOCATION      Recording venue
+  ORGANIZATION  Label, publisher, or distributor
+  ISRC          International Standard Recording Code
+  EAN           European Article Number
+  UPC           Universal Product Code
+  CATALOGNUMBER Catalog number
+  VERSION       Version or remix information
+  ENCODING      Encoding software and version
+  ENCODEDBY     Person who performed the encoding
+  ENCODINGDATE  Date of encoding
+  SOURCE        Original media source
+  SOURCEMEDIA   Physical media type
 
-Implementation: Read line, find '=', split, repeat
-Error handling: Lines without '=' break everything
-Unicode normalization: Not our problem
-Parser bugs: Yes
+Technical Fields:
+  REPLAYGAIN_TRACK_GAIN    Track loudness adjustment
+  REPLAYGAIN_TRACK_PEAK    Track peak amplitude
+  REPLAYGAIN_ALBUM_GAIN    Album loudness adjustment
+  REPLAYGAIN_ALBUM_PEAK    Album peak amplitude
+  BPM                      Beats per minute
+  KEY                      Musical key signature
+  MOOD                     Emotional classification
+  RATING                   Quality or preference rating
 
-For actual Vorbis Comments, see:
-https://xiph.org/vorbis/doc/v-comment.html
-(Our format has nothing to do with it)
+PARSING ALGORITHM
+
+1. Read file as UTF-8 byte stream
+2. Validate UTF-8 encoding
+3. Split on line feed characters (0x0A)
+4. For each line:
+   a. Find first '=' character position
+   b. If no '=' found, report error
+   c. Split at first '=' into key and value
+   d. Store key-value pair (preserving duplicates)
+5. Return ordered list of key-value pairs
+
+ERROR HANDLING
+
+Parse Errors (Fatal):
+  - Invalid UTF-8 sequences
+  - Lines without '=' delimiter
+  - Null bytes in file
+  - Non-LF line terminators in key or value
+
+Recovery Strategy:
+  No error recovery is specified. Parsers should fail fast and report
+  the line number and nature of the error. Partial parsing is discouraged
+  to ensure data integrity.
+
+COMPARISON WITH VORBIS COMMENTS
+
+This Format              Xiph.Org Vorbis Comments
+------------------------  ------------------------
+Plain text file           Binary format in Ogg container
+Case-sensitive keys       Case-insensitive keys
+No vendor string          Mandatory vendor string
+First '=' is delimiter    Last '=' is delimiter
+No framing or length      Length-prefixed fields
+UTF-8 only                UTF-8 only
+No escaping needed        No escaping needed
+Simpler to implement      Requires Ogg parser
+Human-editable            Binary format
+Standalone files          Part of container format
+
+USE CASES
+
+Recommended for:
+  - Simple metadata requirements
+  - Human-edited metadata files
+  - Quick implementation needs
+  - Debugging and development
+  - Interoperability with text tools
+
+Not Recommended for:
+  - Binary data storage (use JSONMeta)
+  - Complex structured data (use JSONMeta)
+  - Multi-line text fields (use JSONMeta)
+  - Type-safe metadata (use JSONMeta)
+  - Large metadata volumes (use JSONMeta)
+
+IMPLEMENTATION NOTES
+
+1. Memory Requirements:
+   Entire file must be loaded for parsing (no streaming)
+
+2. Performance Characteristics:
+   O(n) parsing complexity where n is file size
+   Single-pass parsing possible
+
+3. Security Considerations:
+   Implementations should enforce maximum file size
+   Validate UTF-8 to prevent encoding attacks
+   Limit maximum line length to prevent DoS
+
+4. Compatibility Testing:
+   Test with empty keys and values
+   Test with maximum Unicode code points
+   Test with duplicate keys
+   Test with special characters in keys
+
+5. Best Practices:
+   Preserve original key case
+   Maintain insertion order
+   Don't modify whitespace
+   Report clear error messages
+
+VERSION HISTORY
+
+Version 1.0 (Current):
+  Initial specification release
+  Not compatible with any other format
+  No version identifier in file format
+
+Future Compatibility:
+  Future versions will maintain backward compatibility
+  No breaking changes planned
+  Extensions will use new field names only
+
+REFERENCES
+
+- Xiph.Org Vorbis Comment Specification:
+  https://xiph.org/vorbis/doc/v-comment.html
+  (Note: This format is NOT compatible with Vorbis comments)
+
+- UTF-8 Specification (RFC 3629):
+  https://tools.ietf.org/html/rfc3629
+
+- Unicode Standard:
+  https://www.unicode.org/standard/standard.html
+
+See also: {frad} jsonmeta - Structured metadata with binary support
+Report bugs to: https://github.com/H4n-uL/liblife/issues

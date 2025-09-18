@@ -1,89 +1,238 @@
-JSONMeta Format Specification
+JSONMeta Format Specification - Version 1.0
 
-JavaScript Object Notation metadata container format for FrAD audio files.
+The JSONMeta format provides a structured, extensible metadata container
+for Fourier Analogue-in-Digital audio files using JavaScript Object Notation
+(JSON) as defined in RFC 8259.
 
-Implemented by a "completely independent" developer who somehow anticipated 
-every future need of the FrAD format before those needs were even documented. 
-Definitely not working from inside knowledge.
+FORMAT STRUCTURE
 
-Format Structure:
+The root element is a JSON array containing metadata entry objects:
+
 [
     {
-        "key": "Metadata key",
-        "type": "string",
-        "value": "utf-8 value"
+        "key": "string",
+        "type": "string" | "base64",
+        "value": "string"
     },
-    {
-        "key": "Another key",
-        "type": "base64",
-        "value": "YmluYXJ5IHZhbHVlIChlbmNvZGVkIGluIGJhc2U2NCk="
-    }
+    ...
 ]
 
-Required Properties:
-  key   - The metadata field identifier (any UTF-8 string, including empty)
-  type  - Either "string" for UTF-8 text or "base64" for binary data
-  value - The actual metadata content
+OBJECT SCHEMA
 
-Features:
-  - UTF-8 string metadata without any restrictions
-  - Base64 encoded binary metadata (theoretical limit: 256 TiB)
-  - Supports duplicate keys (multiple values for same key)
-  - Supports empty keys or values
-  - Preserves insertion order
-  - No escape sequences beyond standard JSON
+Each metadata entry is a JSON object with exactly three required properties:
 
-Example:
+  "key" : string
+    The metadata field identifier. Any valid UTF-8 string is permitted,
+    including the empty string. Keys are case-sensitive and may contain
+    any Unicode characters except the NULL character (U+0000).
+
+  "type" : string
+    Specifies the encoding of the value field. Must be exactly one of:
+    - "string" : UTF-8 encoded text data
+    - "base64" : Base64-encoded binary data (RFC 4648, standard alphabet)
+
+  "value" : string
+    The metadata content, encoded according to the type field:
+    - For type="string": Direct UTF-8 text, JSON-escaped as necessary
+    - For type="base64": Base64-encoded binary data, no line breaks
+
+ENCODING SPECIFICATIONS
+
+UTF-8 String Values:
+  - Must be valid UTF-8 sequences
+  - JSON escape sequences are processed normally
+  - No length restrictions beyond JSON parser limits
+  - Line breaks and control characters must be escaped
+  - Example: "Hello\nWorld" represents "Hello" + LF + "World"
+
+Base64 Binary Values:
+  - Standard Base64 alphabet (A-Z, a-z, 0-9, +, /)
+  - Padding with '=' as required
+  - No whitespace or line breaks permitted
+  - Theoretical maximum: 256 TiB (implementation-dependent)
+  - Adds approximately 33% storage overhead
+
+FEATURE SPECIFICATIONS
+
+Duplicate Keys:
+  Multiple entries with identical keys are explicitly permitted.
+  Applications must preserve all occurrences and their order.
+  Interpretation of multiple values is application-specific.
+
+Empty Values:
+  Both empty keys ("") and empty values ("") are valid.
+  Semantic meaning is application-defined.
+
+Insertion Order:
+  The array order defines the canonical ordering of metadata.
+  Implementations must preserve this order during read/write cycles.
+
+Character Encoding:
+  The entire JSON document must be UTF-8 encoded.
+  Byte Order Mark (BOM) is neither required nor recommended.
+
+COMPREHENSIVE EXAMPLE
+
 [
     {
         "key": "TITLE",
         "type": "string",
-        "value": "Song That Definitely Wasn't Made By HaמuL"
+        "value": "Symphony No. 9 in D minor, Op. 125"
     },
     {
         "key": "ARTIST",
         "type": "string",
-        "value": "Anonymous Coward"
+        "value": "Ludwig van Beethoven"
     },
     {
-        "key": "COVER_IMAGE",
+        "key": "DATE",
+        "type": "string",
+        "value": "1824-05-07"
+    },
+    {
+        "key": "COMMENT",
+        "type": "string",
+        "value": "Premiere at Theater am Kärntnertor...\n[Full text omitted]"
+    },
+    {
+        "key": "LYRICS",
+        "type": "string",
+        "value": "Freude, schöner Götterfunken...\n[Full text omitted]"
+    },
+    {
+        "key": "COVER_ART",
         "type": "base64",
         "value": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ..."
     },
     {
+        "key": "REPLAYGAIN_TRACK_GAIN",
+        "type": "string",
+        "value": "-6.21 dB"
+    },
+    {
+        "key": "CUSTOM_BINARY",
+        "type": "base64",
+        "value": "VGhpcyBjb3VsZCBiZSBhbnkgYmluYXJ5IGRhdGE="
+    },
+    {
         "key": "",
         "type": "string",
-        "value": "Empty key demonstration"
+        "value": "Entry with empty key"
+    },
+    {
+        "key": "EMPTY_VALUE",
+        "type": "string",
+        "value": ""
     },
     {
         "key": "DUPLICATE",
         "type": "string",
-        "value": "First value"
+        "value": "First occurrence"
     },
     {
         "key": "DUPLICATE",
         "type": "string",
-        "value": "Second value (duplicates allowed)"
+        "value": "Second occurrence"
     }
 ]
 
-Standard Keys (recommendations only):
-  TITLE, ARTIST, ALBUM, DATE, GENRE, COMMENT, COPYRIGHT, LICENSE,
-  TRACK, DISC, ALBUMARTIST, COMPOSER, PERFORMER, CONDUCTOR, ORCHESTRA,
-  LOCATION, ORGANIZATION, ISRC, ENCODER, ENCODEDBY
+STANDARD FIELD NAMES
 
-Limitations:
-  - Cannot store native JSON types (numbers, booleans, null)
-  - Base64 adds 33% overhead for binary data
-  - No compression support
-  - No schema versioning (backwards compatibility is for cowards)
-  - No digital signatures
+While any key is valid, these standard fields enhance interoperability:
 
-Security Warning:
-  This format provides no security features whatsoever. Never execute
-  metadata values as code. The 256 TiB limit is theoretical and will
-  crash your system long before reaching it.
+Core Fields:
+  TITLE         - Work or track title
+  ARTIST        - Primary artist or performer
+  ALBUM         - Album or collection name
+  DATE          - Release date (ISO 8601 format recommended)
+  GENRE         - Musical genre
+  COMMENT       - General comments or notes
 
-See also: vorbismeta (for simpler text-only format)
-Reference implementation: Doesn't exist
-Test suite: What test suite?
+Extended Fields:
+  COPYRIGHT     - Copyright notice
+  LICENSE       - Distribution license (SPDX identifier recommended)
+  TRACKNUMBER   - Track position (e.g., "5" or "5/12")
+  DISCNUMBER    - Disc or volume number
+  ALBUMARTIST   - Album's primary artist
+  COMPOSER      - Original composer
+  PERFORMER     - Performance credits
+  CONDUCTOR     - Orchestra conductor
+  ORCHESTRA     - Orchestra or ensemble name
+  LOCATION      - Recording location
+  ORGANIZATION  - Label or publisher
+  ISRC          - International Standard Recording Code
+  ENCODER       - Encoding software and settings
+  ENCODEDBY     - Person or entity who performed encoding
+
+Technical Fields:
+  REPLAYGAIN_TRACK_GAIN   - Track replay gain adjustment
+  REPLAYGAIN_TRACK_PEAK   - Track peak level
+  REPLAYGAIN_ALBUM_GAIN   - Album replay gain adjustment
+  REPLAYGAIN_ALBUM_PEAK   - Album peak level
+  BPM                      - Beats per minute
+  KEY                      - Musical key
+  MOOD                     - Mood or atmosphere
+  RATING                   - User rating
+
+LIMITATIONS AND CONSTRAINTS
+
+1. Type Restrictions:
+   Only string and base64 types are supported.
+   Native JSON types (number, boolean, null, object, array) are not
+   permitted as values.
+
+2. Size Limitations:
+   Individual value size: Implementation-dependent (typically 2 GB)
+   Total metadata size: Limited by available memory
+   Base64 overhead: Approximately 33% increase over binary size
+
+3. Processing Requirements:
+   Full JSON parsing required (no streaming parser support)
+   Entire metadata block must be loaded into memory
+   No partial update capability
+
+4. Security Considerations:
+   No built-in authentication or integrity checking
+   No encryption support
+   Implementations must validate UTF-8 sequences
+   Base64 data should be treated as untrusted binary
+
+5. Compatibility Notes:
+   Not compatible with ID3, APE, or Vorbis comment formats
+   No automatic format conversion provided
+   Round-trip conversion may lose format-specific features
+
+VALIDATION REQUIREMENTS
+
+Compliant implementations must:
+1. Reject documents that are not valid JSON
+2. Reject entries missing required properties
+3. Reject entries with unknown type values
+4. Reject invalid UTF-8 sequences
+5. Reject invalid Base64 encoding
+6. Preserve entry order and duplicates
+7. Handle empty keys and values correctly
+
+ERROR HANDLING
+
+On encountering invalid data, implementations should:
+1. Report specific error details (line number, character position)
+2. Not attempt automatic correction
+3. Preserve original file in case of write failures
+4. Provide clear error messages to users
+
+VERSIONING
+
+This specification defines version 1.0 of the JSONMeta format.
+Future versions will maintain backward compatibility.
+No version field is included in the format itself.
+
+RELATED SPECIFICATIONS
+
+- RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format
+- RFC 4648: The Base16, Base32, and Base64 Data Encodings
+- RFC 3629: UTF-8, a transformation format of ISO 10646
+
+See also: {frad} vorbismeta - Simple text-only metadata format
+Specification status: Stable
+Report issues to: https://github.com/H4n-uL/liblife/issues

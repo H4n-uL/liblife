@@ -2,84 +2,174 @@ Usage: {frad} encode [OPTION]... INPUT-FILE
    or: {frad} enc [OPTION]... INPUT-FILE
 
 Encode Pulse Code Modulated audio data to Fourier Analogue-in-Digital format
-with various compression profiles and optional Reed-Solomon error correction.
+utilizing configurable spectral transformation algorithms with optional
+Reed-Solomon forward error correction for resilient storage and transmission.
 
-When INPUT-FILE is -, read standard input.
-
-Written by the LIFE development team, an independent group of developers who 
-have absolutely no affiliation with the original FrAD specification authors. 
-This is merely a third-party reference implementation created by studying the 
-publicly available specification documents.
+When INPUT-FILE is -, read standard input. The program will attempt to detect
+the input format automatically when possible, otherwise explicit format
+specification is required through command-line parameters.
 
 Mandatory arguments to long options are mandatory for short options too.
+The ordering of options is not significant, except where explicitly noted.
 
-Audio format specification (REQUIRED when encoding raw PCM):
-      --sample-rate RATE        set input sample rate in Hz (1-4294967295)
-      --sr RATE                 same as --sample-rate
-      --srate RATE              same as --sample-rate
-      --channels N              set number of audio channels (1-256)
-      --ch N                    same as --channels
-      --chnl N                  same as --channels
-      --bits DEPTH              set output bit depth (8/16/24/32/64)
-  -b, --bit DEPTH               same as --bits
+Audio format specification (REQUIRED for raw PCM input):
+      --sample-rate RATE        specify input sample rate in Hertz
+      --sr RATE                 abbreviated form of --sample-rate
+      --srate RATE              alternative form of --sample-rate
+                                Valid range: 1 Hz to 4,294,967,295 Hz
+                                Common rates: 8000, 11025, 16000, 22050,
+                                32000, 44100, 48000, 88200, 96000, 192000
+
+      --channels N              specify number of discrete audio channels
+      --ch N                    abbreviated form of --channels
+      --chnl N                  alternative form of --channels
+      --channel N               singular form of --channels
+                                Valid range: 1 to 256 channels
+                                Common values: 1 (mono), 2 (stereo),
+                                4 (quadraphonic), 5.1 (6 channels),
+                                7.1 (8 channels)
+
+      --bits DEPTH              specify output quantization bit depth
+  -b, --bit DEPTH               abbreviated form with short option
+                                Valid depths: 8, 12, 16, 24, 32, 48, 64
+                                Higher bit depths provide greater dynamic
+                                range at the cost of increased file size
 
 Input/Output control:
-  -o, --output FILE             write output to FILE instead of stdout
-      --out FILE                same as --output
-  -f, --format FMT              specify input PCM format (default: f64be)
-      --fmt FMT                 same as --format
-      --pcm FMT                 same as --format
-                                Valid formats: u8, s16le, s16be, s24le, s24be,
-                                s32le, s32be, f32le, f32be, f64le, f64be
-  -y, --force                   overwrite output files without prompting
-      --overwrite               same as --force
+  -o, --output FILE             write encoded output to FILE
+      --out FILE                abbreviated form of --output
+                                If omitted, output is written to stdout
+                                or INPUT-FILE with .frad extension appended
 
-Compression parameters:
-      --profile NUM             select FrAD profile (0-4, default: 4)
-      --prf NUM                 same as --profile
-                                0: lossless DCT, 1: psychoacoustic lossy,
-                                2: experimental (broken), 3: reserved,
-                                4: uncompressed PCM (recommended)
-      --loss-level LEVEL        set lossy compression level for Profile 1
-      --lv LEVEL                same as --loss-level
-      --level LEVEL             same as --loss-level
-                                Range: 0 (transparent) to 20 (maximum)
-      --fsize SIZE              set frame size in samples (default: 2048)
-      --fr SIZE                 same as --fsize
-      --frame-size SIZE         same as --fsize
-      --overlap-ratio RATIO     set overlap ratio 1/RATIO (default: 16)
-      --overlap RATIO           same as --overlap-ratio
-      --olap RATIO              same as --overlap-ratio
+  -f, --format FMT              specify input PCM sample format
+      --fmt FMT                 abbreviated form of --format
+      --pcm FMT                 alternative form emphasizing PCM nature
+                                Default: f64be (64-bit float, big-endian)
 
-Error correction:
-  -e, --ecc DATA CODE           enable Reed-Solomon ECC with DATA/CODE ratio
-      --enable-ecc DATA CODE    same as --ecc (default: 96 24)
-                                Maximum: 223 32, provides CODE/2 error
-                                correction capability
+                                Integer formats:
+                                  u8        - unsigned 8-bit
+                                  s16le/be  - signed 16-bit little/big-endian
+                                  s24le/be  - signed 24-bit little/big-endian
+                                  s32le/be  - signed 32-bit little/big-endian
 
-Endianness:
-      --little-endian           use little-endian byte order in output
-      --le                      same as --little-endian
-                                Default is big-endian (network byte order)
+                                Floating-point formats:
+                                  f32le/be  - 32-bit IEEE 754 single precision
+                                  f64le/be  - 64-bit IEEE 754 double precision
 
-Metadata embedding:
-  -m, --meta KEY VALUE          add metadata key-value pair
-      --tag KEY VALUE           same as --meta
-      --jsonmeta FILE           embed metadata from JSON file
-      --jm FILE                 same as --jsonmeta
-      --vorbis-meta FILE        embed Vorbis comment format metadata
-      --vm FILE                 same as --vorbis-meta
-      --image FILE              embed cover image (JPEG/PNG/GIF/BMP)
-      --img FILE                same as --image
+      --little-endian           force little-endian byte ordering in output
+      --le                      abbreviated form of --little-endian
+                                Default: big-endian (network byte order)
+                                for cross-platform compatibility
 
-Informative output:
+Compression and transformation parameters:
+      --profile NUM             select FrAD compression profile
+      --prf NUM                 abbreviated form of --profile
+                                Default: 4 (uncompressed PCM archiving)
+
+                                Available profiles:
+                                0 - DCT Archiving: Lossless discrete cosine
+                                    transform with arithmetic coding.
+                                    Optimal for archival storage with
+                                    moderate compression ratios.
+
+                                1 - Lossy Psychoacoustic: Perceptual coding
+                                    using masking threshold estimation.
+                                    Variable bitrate with quality levels.
+
+                                2 - [EXPERIMENTAL] Advanced hybrid codec
+                                    Currently non-functional, reserved for
+                                    future implementation.
+
+                                3 - [RESERVED] Placeholder for future use.
+
+                                4 - PCM Archiving: Uncompressed storage
+                                    with frame-based organization.
+                                    Recommended for general use cases.
+
+      --loss-level LEVEL        perceptual quality for Profile 1
+      --lv LEVEL                abbreviated form of --loss-level
+      --level LEVEL             alternative form of --loss-level
+                                Range: 0 to 20 (lower is better)
+                                  0-3   : Transparent quality
+                                  4-8   : Near-transparent
+                                  9-14  : Good quality
+                                  15-20 : Acceptable quality
+
+      --fsize SIZE              samples per analysis frame
+      --fr SIZE                 abbreviated form of --fsize
+      --frame-size SIZE         descriptive form of --fsize
+                                Default: 2048 samples
+                                Valid range: 128 to 32768 (power of 2)
+                                Larger frames improve frequency resolution
+                                but increase latency and memory usage
+
+      --overlap-ratio RATIO     frame overlap factor as 1/RATIO
+      --overlap RATIO           abbreviated form of --overlap-ratio
+      --olap RATIO              compact form of --overlap-ratio
+                                Default: 16 (6.25% overlap)
+                                Valid range: 2 to 256
+                                Higher values reduce overlap percentage
+
+Error correction and resilience:
+  -e, --ecc DATA CODE           enable Reed-Solomon error correction
+      --enable-ecc DATA CODE    same as --ecc
+                                Default: 96 24 (20% redundancy)
+                                Maximum: DATA: 1-255, CODE: 0-(255-DATA)
+
+                                The error correction capability is
+                                approximately CODE/2 symbol errors per
+                                block. Increasing CODE improves recovery
+                                capability at the cost of file size.
+
+Metadata and auxiliary data:
+  -m, --meta KEY VALUE          embed metadata key-value pair
+      --tag KEY VALUE           alternative form (Vorbis-style naming)
+                                Multiple invocations accumulate metadata
+                                Keys are case-sensitive UTF-8 strings
+                                Values support full Unicode range
+
+      --jsonmeta FILE           import metadata from JSON file
+      --jm FILE                 abbreviated form of --jsonmeta
+                                See 'jsonmeta' command for format details
+
+      --vorbis-meta FILE        import Vorbis comment format metadata
+      --vm FILE                 abbreviated form of --vorbis-meta
+                                See 'vorbismeta' command for format details
+
+      --image FILE              embed album artwork or cover image
+      --img FILE                abbreviated form of --image
+                                Supported formats: JPEG, PNG, GIF, BMP
+                                Maximum recommended size: 16 MB
+
+Diagnostic and informational output:
   -v, --loglevel N              set log verbosity level (0-1)
-                                0: errors only, 1: informational
+                                0: errors only
+                                1: informational
 
-Examples:
-  {frad} encode input.pcm --sr 44100 --ch 2 --bits 16 -o output.frad
-  {frad} enc - --srate 48000 --channels 2 --b 24 < input.raw > output.frad
-  {frad} encode audio.pcm --sr 44100 --ch 2 --profile 1 --loss-level 5
+Extended examples:
+  Basic stereo encoding at CD quality:
+    {frad} encode input.pcm --sr 44100 --ch 2 --bits 16 -o output.frad
 
-Full documentation is maintained as a Texinfo manual (which doesn't exist).
-Report bugs to: life-frad-bugs@gnu.org (also doesn't exist)
+  High-quality encoding with error correction:
+    {frad} encode concert.raw --sample-rate 96000 --channels 2 \
+           --bits 24 --profile 0 --ecc 192 32 --output concert.frad
+
+  Lossy encoding with metadata:
+    {frad} encode audio.pcm --sr 48000 --ch 2 --profile 1 --level 5 \
+           --meta ARTIST Bach --meta TITLE "BWV 565" --image cover.jpg
+
+  Pipe processing with format conversion:
+    sox input.wav -t raw -e floating-point -b 64 --endian big - | \
+    {frad} encode - --sr 44100 --ch 2 --bits 16 --format f64be > output.frad
+
+Exit status:
+  0  if successful
+  1  if errors occurred
+  2  if encoding failed
+
+The full documentation for {frad} encode is maintained as a Texinfo manual.
+If the info and {frad} programs are properly installed at your site, the
+command `info frad encode' should provide complete documentation.
+
+Online documentation: https://github.com/H4n-uL/liblife/wiki
+Report bugs to: https://github.com/H4n-uL/liblife/issues

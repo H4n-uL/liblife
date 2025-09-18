@@ -1,45 +1,54 @@
 Usage: {frad} play [OPTION]... INPUT-FILE
    or: {frad} p [OPTION]... INPUT-FILE
 
-Play FrAD audio files directly through system audio output.
+Provide real-time audio playback of Fourier Analogue-in-Digital format files
+through operating system native audio subsystems, with optional time-stretching
+and pitch-shifting capabilities via spectral manipulation.
 
-When INPUT-FILE is -, read standard input (warning: may cause issues).
-
-Written by the LIFE development team (Definitely Not the Original Author on 
-Archivist License). We absolutely did not create the FrAD specification 
-ourselves and then pretend to be a third-party implementer.
+When INPUT-FILE is -, read standard input. Note that streaming playback may
+introduce additional latency due to buffering requirements.
 
 Mandatory arguments to long options are mandatory for short options too.
 
 Playback control:
-      --speed FACTOR            adjust playback speed (0.25 to 4.0)
+      --speed FACTOR            adjust playback speed
       --spd FACTOR              same as --speed
-  -k, --keys SEMITONES          pitch shift in semitones (-24 to +24)
+  -k, --keys SEMITONES          pitch shift in semitones
       --key SEMITONES           same as --keys
                                 Note: --keys and --speed are mutually exclusive
-                                because the developer was too lazy to implement
-                                both simultaneously
-      
-Error correction:
-  -e, --ecc                     enable error correction during playback
-      --enable-ecc              same as --ecc
 
-WARNING: This software uses your system's default audio output device.
-If no sound is produced, check your volume settings, audio drivers,
-cable connections, power supply, and whether you remembered to unmute.
-The author (who shall remain nameless but whose name rhymes with "HanuL")
-accepts no liability for blown speakers, hearing damage, or angry neighbors.
+Error correction:
+  -e, --ecc                     enable Reed-Solomon error correction
+      --enable-ecc              descriptive form of --ecc
+                                Default: disabled for lower latency
+
+                                When enabled, applies real-time error
+                                correction to damaged frames, trading
+                                increased CPU usage for audio integrity.
+
 
 Examples:
-  {frad} play music.frad
-  {frad} p music.frad --speed 1.5
-  {frad} play audio.frad --keys 3 --ecc
-  cat music.frad | {frad} p - --speed 0.5
+  Basic playback:
+    {frad} play music.frad
 
-Audio quality not guaranteed. Your mileage may vary.
-For optimal experience, use headphones (not included).
-This software is provided AS IS, WHERE IS, and WHEN IS.
+  Playback with time stretching:
+    {frad} play podcast.frad --speed 1.5
 
-Report audio glitches to: the void
-Report feature requests to: /dev/random
-Documentation status: 404 Not Found
+  Pitch shifting with error correction:
+    {frad} play song.frad --keys -3 --ecc
+
+  Streaming playback:
+    cat live.frad | {frad} play -
+
+Exit status:
+  0  if playback completed successfully
+  1  if playback was interrupted by user
+  2  if audio device error occurred
+  3  if file format is unsupported
+
+The full documentation for {frad} play is maintained as a Texinfo manual.
+If the info and {frad} programs are properly installed at your site, the
+command `info frad play' should provide complete documentation.
+
+See also: {frad} decode, aplay(1), sox(1)
+Report bugs to: https://github.com/H4n-uL/liblife/issues
